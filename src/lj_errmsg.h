@@ -145,6 +145,9 @@ ERRDEF(XBREAK,	"no loop to break")
 ERRDEF(XLUNDEF,	"undefined label " LUA_QS)
 ERRDEF(XLDUP,	"duplicate label " LUA_QS)
 ERRDEF(XGSCOPE,	"<goto %s> jumps into the scope of local " LUA_QS)
+ERRDEF(XDIRECT,	"invalid lexer/parser directive")
+ERRDEF(XLOP,	"too long operator")
+ERRDEF(XEMSCOP,	"empty scope")
 
 /* Bytecode reader errors. */
 ERRDEF(BCFMT,	"cannot load incompatible bytecode")

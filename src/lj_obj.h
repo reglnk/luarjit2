@@ -630,6 +630,17 @@ typedef struct StrInternState {
   LJ_ALIGN(8) uint64_t seed;	/* Random string seed. */
 } StrInternState;
 
+typedef struct ParserState {
+  int32_t mode;		/* Syntax mode. 0 = standard Lua, 1 = modified. */
+  int32_t unused1;
+  /* Reserved words and their fast-lookup numbers. */
+  GCstr *funcstr;	/* 'function' */
+  GCstr *fnstr;		/* 'fn' */
+  GCstr *operstr;	/* 'operator' */
+  GCstr *nameof_str;	/* 'nameof' */
+  GCstr *end_str;	/* 'end' */
+} ParserState;
+
 /* Global state, shared by all threads of a Lua universe. */
 typedef struct global_State {
   lua_Alloc allocf;	/* Memory allocator. */
@@ -659,6 +670,7 @@ typedef struct global_State {
   MRef jit_base;	/* Current JIT code L->base or NULL. */
   MRef ctype_state;	/* Pointer to C type state. */
   PRNGState prng;	/* Global PRNG state. */
+  ParserState pars;	/* Global parser state. */
   GCRef gcroot[GCROOT_MAX];  /* GC roots. */
   MRef saved_jit_base;  /* saved jit_base for lj_err_throw */
 } global_State;
