@@ -637,6 +637,7 @@ typedef struct ParserState {
   GCstr *funcstr;	/* 'function' */
   GCstr *fnstr;		/* 'fn' */
   GCstr *operstr;	/* 'operator' */
+  GCstr *usingstr;	/* 'using' */
   GCstr *nameof_str;	/* 'nameof' */
   GCstr *end_str;	/* 'end' */
 } ParserState;

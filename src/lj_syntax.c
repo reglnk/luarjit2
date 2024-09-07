@@ -17,25 +17,32 @@ LUA_API int lua_getsyntaxmode(lua_State *L)
   return ps->mode;
 }
 
-LUA_API void lua_setsyntaxmode(lua_State *L, int mode)
+LUA_API int lua_setsyntaxmode(lua_State *L, int mode)
 {
-  lj_assertX(mode < 2, "invalid syntax mode");
+  if (mode < 0 || mode > 1) {
+    setstrV(L, L->top++, lj_err_str(L, LJ_ERR_NUMRNG));
+    lj_err_throw(L, LUA_ERRRUN);
+    return LUA_ERRRUN;
+  }
   global_State *g = G(L);
   ParserState *ps = &g->pars;
-  if (ps->mode == mode) return;
+  if (ps->mode == mode) return LUA_OK;
   ps->mode = mode;
   if (mode == 1) {
     ps->funcstr->reserved = 0;
     ps->end_str->reserved = 0;
     ps->fnstr->reserved = lj_lex_token2reserved(TK_function); /* so that TK_fn is unused in parser */
     ps->operstr->reserved = lj_lex_token2reserved(TK_operator);
+    ps->usingstr->reserved = lj_lex_token2reserved(TK_using);
     ps->nameof_str->reserved = lj_lex_token2reserved(TK_nameof);
   } else {
     ps->funcstr->reserved = lj_lex_token2reserved(TK_function);
     ps->end_str->reserved = lj_lex_token2reserved(TK_end);
     ps->fnstr->reserved = 0;
     ps->operstr->reserved = 0;
+    ps->usingstr->reserved = 0;
     ps->nameof_str->reserved = 0;
   }
+  return LUA_OK;
 }
 

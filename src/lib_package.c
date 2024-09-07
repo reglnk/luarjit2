@@ -625,7 +625,7 @@ LUALIB_API int luaopen_package(lua_State *L)
   noenv = lua_toboolean(L, -1);
   lua_pop(L, 1);
   setpath(L, "path", LUA_PATH, LUA_PATH_DEFAULT, noenv);
-  setpath(L, "lrpath", LUAR_PATH, LUAR_PATH_DEFAULT, noenv);
+  setpath(L, "lrpath", LUA_LRPATH, LUA_LRPATH_DEFAULT, noenv);
   setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
   lua_pushliteral(L, LUA_PATH_CONFIG);
   lua_setfield(L, -2, "config");

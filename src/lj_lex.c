@@ -837,6 +837,9 @@ void lj_lex_init(lua_State *L)
       case (uint8_t)TK_operator:
 	g->pars.operstr = s;
 	continue;
+      case (uint8_t)TK_using:
+        g->pars.usingstr = s;
+        continue;
       case (uint8_t)TK_nameof:
 	g->pars.nameof_str = s;
 	continue;

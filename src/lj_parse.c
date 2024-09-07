@@ -1083,8 +1083,24 @@ static GCstr *lex_str(LexState *ls)
   err_token(ls, TK_name);
 }
 
-/* Mangle a symbol name */
+/* Ditto, but without consuming of string. */
+static GCstr *lex_str_keep(LexState *ls)
+{
+  GCstr *s;
+  switch (ls->tok) {
+    case TK_name:
+    case TK_oper:
+    case TK_fldoper:
+#if !LJ_52
+    case TK_goto:
+#endif
+      s = strV(&ls->tokval);
+      return s;
+  }
+  err_token(ls, TK_name);
+}
 
+/* Mangle a symbol name */
 static GCstr *luar_str_mangle2(LexState *ls, const char *str, unsigned len, GCstr *source, unsigned bias)
 {
   const char *d = strdata(source);
@@ -1099,7 +1115,7 @@ static LJ_AINLINE void luar_str_mangle(LexState *ls, const char *str, unsigned l
   setstrV(ls->L, &ls->tokval, luar_str_mangle2(ls, str, len, strV(&ls->tokval), 0));
 }
 
-/* consume 'operator' token (and <newindex> modifier), and
+/* Consume 'operator' token (possibly with <newindex> modifier), and
  * mangle token string with respect to that. Or do nothing */
 static LJ_AINLINE void luar_opt_mangle(LexState *ls)
 {
@@ -2081,7 +2097,11 @@ static const struct {
 
 #define UNARY_PRIORITY		9  /* Priority for unary operators. */
 
-static int parse_infix_isend(LexToken tok)
+/* Defines the list of symbols which make infix expressions unary
+ * (incase the one is right after such an operator)
+ * Also suits for detecting missing argument for 'return' in lambdas
+ */
+static int parse_is_notval(LexToken tok)
 {
   switch (tok)
   {
@@ -2125,7 +2145,7 @@ static void parse_infix_rhs(LexState *ls, ExpDesc *e, unsigned limit, LexToken o
   FuncState *fs = ls->fs;
   BCLine line = ls->linenumber;
   ExpDesc arg;
-  if (parse_infix_isend(ls->tok)) {
+  if (parse_is_notval(ls->tok)) {
     if (op != TK_oper) {
       err_syntax(ls, LJ_ERR_XSYNTAX);
       lj_lex_next(ls);
@@ -2610,7 +2630,7 @@ static void parse_call_assign_luar(LexState *ls)
   luar_opt_mangle(ls);
   expr_primary(ls, &vl.v);
   if (vl.v.k == VCALL) {  /* Function call statement. */
-    if (parse_infix_isend(ls->tok)) {
+    if (parse_is_notval(ls->tok)) {
       setbc_b(bcptr(fs, &vl.v), 1);  /* No results. */
       return;
     }
@@ -2670,6 +2690,41 @@ static void parse_local(LexState *ls)
     assign_adjust(ls, nvars, nexps, &e);
     var_add(ls, nvars);
   }
+}
+
+/* Parse 'using' statement. */
+static void parse_using(LexState *ls)
+{
+  /* Since for each of N listed variables it's instantly obvious what's to be assigned
+   * (itself but global), we may divide this into N assignments and apparently not lose anything.
+   * The source `local a, b, c = a, b, c` is compiled to the same bytecode as `local a = a; local b = b; local c = c`
+   */
+  FuncState *fs = ls->fs;
+  ExpDesc e;
+  GCstr *name;
+  loop1: {
+    luar_opt_mangle(ls);
+    name = lex_str_keep(ls);
+    var_lookup(ls, &e);
+    expr_tonextreg(ls->fs, &e);  /* Close expression. */
+  }
+  if (lex_opt(ls, ',')) {
+    var_new(ls, 0, name);
+    var_add(ls, 1);
+    goto loop1;
+  }
+  while (ls->tok == '.') {
+    ExpDesc key;
+    expr_toanyreg(fs, &e);
+    lj_lex_next(ls);  /* Skip dot or colon. */
+    luar_opt_mangle(ls);
+    name = lex_str_keep(ls);
+    expr_str(ls, &key);
+    expr_index(fs, &e, &key);
+  }
+  expr_tonextreg(fs, &e);
+  var_new(ls, 0, name);
+  var_add(ls, 1);
 }
 
 /* Parse 'function' statement. */
@@ -3088,7 +3143,8 @@ static void parse_if(LexState *ls, BCLine line)
 
 static void parse_attr(LexState *ls, BCLine line)
 {
-  lj_lex_next(ls); /* Skip '[' */
+  lj_lex_next(ls); /* Skip '@' */
+  lex_check(ls, '[');
   GCstr *s = lex_str(ls);
   lua_State *L = ls->L;
   if (s->len == 3 && !strcmp(strdata(s), "lua")) {
@@ -3096,8 +3152,7 @@ static void parse_attr(LexState *ls, BCLine line)
   } else if (s->len == 4 && !strcmp(strdata(s), "luar")) {
     lua_setsyntaxmode(L, 1);
   } else {
-    setstrV(L, L->top++, lj_err_str(L, LJ_ERR_BCBAD));
-    lj_err_throw(L, LUA_ERRSYNTAX);
+    err_syntax(ls, LJ_ERR_XSYNTAX);
   }
   lex_check(ls, ']');
 }
@@ -3108,24 +3163,8 @@ static void parse_attr(LexState *ls, BCLine line)
 static int parse_stmt(LexState *ls)
 {
   BCLine line = ls->linenumber;
-  if (G(ls->L)->pars.mode != 1) {
-    if (ls->tok == TK_do) {
-      lj_lex_next(ls);
-      parse_block(ls);
-      lex_match(ls, TK_end, TK_do, line);
-      return 0;
-    }
-  }
-  else if (ls->tok == '{') {
-    lj_lex_next(ls);
-    if (ls->tok == '}')
-      lj_lex_error(ls, '}', LJ_ERR_XEMSCOP);
-    parse_block(ls);
-    lex_match(ls, '}', '{', line);
-    return 0;
-  }
   switch (ls->tok) {
-  case '[':
+  case '@':
     parse_attr(ls, line);
     break;
   case TK_if:
@@ -3134,6 +3173,21 @@ static int parse_stmt(LexState *ls)
   case TK_while:
     parse_while(ls, line);
     break;
+  case TK_do: {
+    if (G(ls->L)->pars.mode == 0) {
+      lj_lex_next(ls);
+      parse_block(ls);
+      lex_match(ls, TK_end, TK_do, line);
+    }
+    else {
+      lj_lex_next(ls);
+      line = ls->linenumber;
+      lex_check(ls, '{');
+      parse_block(ls);
+      lex_match(ls, '}', '{', line);
+    }
+    break;
+  }
   case TK_for:
     parse_for(ls, line);
     break;
@@ -3146,6 +3200,10 @@ static int parse_stmt(LexState *ls)
   case TK_local:
     lj_lex_next(ls);
     parse_local(ls);
+    break;
+  case TK_using:
+    lj_lex_next(ls);
+    parse_using(ls);
     break;
   case TK_return:
     lj_lex_next(ls);
@@ -3232,6 +3290,7 @@ static int parse_chunk_opt(LexState *ls)
   return brk;
 }
 
+/* Returns 1 if has curly brackets */
 static int parse_chunk_optret(LexState *ls)
 {
   BCLine line = ls->linenumber;
@@ -3240,7 +3299,8 @@ static int parse_chunk_optret(LexState *ls)
     if (ls->tok != '}') lex_match(ls, '}', '{', line);
     return 1;
   }
-  if (ls->tok == ';') {
+  if (parse_is_notval(ls->tok)) {
+    err_syntax(ls, LJ_ERR_XSYNTAX);
     return 0;
   }
   parse_return(ls);

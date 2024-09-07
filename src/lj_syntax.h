@@ -8,6 +8,6 @@
 
 /* Switching language frontends. */
 LUA_API int lua_getsyntaxmode(lua_State *L);
-LUA_API void lua_setsyntaxmode(lua_State *L, int mode);
+LUA_API int lua_setsyntaxmode(lua_State *L, int mode);
 
 #endif
