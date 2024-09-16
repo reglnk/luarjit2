@@ -17,9 +17,9 @@
   _(and) _(break) _(do) _(else) _(elseif) _(end) _(false) \
   _(for) _(function) _(fn) _(goto) _(if) _(in) _(local) _(nil) _(not) _(or) \
   _(repeat) _(return) _(then) _(true) _(until) _(while) _(operator) _(using) _(nameof) \
-  __(pow, ^^) __(concat, ..) __(dots, ...) __(eq, ==) __(ge, >=) __(le, <=) __(ne, ~=) \
+  __(pow, ^^) __(concat, ..) __(dots, ...) __(eq, ==) __(ge, >=) __(le, <=) __(ne, ~=) __(subs, =~)\
   __(label, ::) __(number, <number>) __(name, <name>) __(string, <string>) \
-  __(oper, <operator>) __(fldoper, <field operator>) __(eof, <eof>)
+  __(subval, <substituted value>) __(oper, <operator>) __(fldoper, <field operator>) __(eof, <eof>)
 
 enum {
   TK_OFS = 256,
@@ -51,6 +51,16 @@ typedef struct VarInfo {
   uint8_t info;		/* Variable/goto/label info. */
 } VarInfo;
 
+/* Kinds of symbol mangling. */
+typedef enum LexMKind {
+  MK_none = 0,
+  MK_unknown,
+  MK_oper,
+  MK_index,
+  MK_newindex,
+  MK_vname
+} LexMKind;
+
 /* Lua lexer state. */
 typedef struct LexState {
   struct FuncState *fs;	/* Current FuncState. Defined in lj_parse.c. */
@@ -78,6 +88,10 @@ typedef struct LexState {
   uint32_t level;	/* Syntactical nesting level. */
   int endmark;		/* Trust bytecode end marker, even if not at EOF. */
   int fr2;		/* Generate bytecode for LJ_FR2 mode. */
+  int xsub;		/* Non-zero if substitution operator is in attention. */
+  void *xbase;		/* Base value for substitution. */
+  void *xkey;		/* Key value for substitution. */
+  LexMKind mkind;	/* Kind of mangling for next symbol name. */
 } LexState;
 
 LJ_FUNC int lj_lex_setup(lua_State *L, LexState *ls);
@@ -95,15 +109,19 @@ LJ_FUNC void lj_lex_init(lua_State *L);
 #define lj_assertLS(c, ...)	((void)ls)
 #endif
 
-/* for infix and postfix symbolic operators */
+/* Symbol mangling headers */
+
+/* for infix and postfix symbolic operators, MK_oper
+ * also for field operators, MK_index
+ */
 #define LUAR_OPHDR ("__LRop_")
 #define LUAR_OPHDR_LEN (sizeof(LUAR_OPHDR)-1)
 
-/* for field operators that participate in assignment */
+/* for field operators that handle assignment, MK_newindex */
 #define LUAR_AOPHDR ("__LRaop_")
 #define LUAR_AOPHDR_LEN (sizeof(LUAR_AOPHDR)-1)
 
-/* for operators with variable-like names */
+/* for operators with variable-like names, MK_vname */
 #define LUAR_VAROPHDR ("__LRvop_")
 #define LUAR_VAROPHDR_LEN (sizeof(LUAR_VAROPHDR)-1)
 

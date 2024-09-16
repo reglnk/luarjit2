@@ -147,6 +147,8 @@ ERRDEF(XLDUP,	"duplicate label " LUA_QS)
 ERRDEF(XGSCOPE,	"<goto %s> jumps into the scope of local " LUA_QS)
 ERRDEF(XDIRECT,	"invalid lexer/parser directive")
 ERRDEF(XLOP,	"too long operator")
+ERRDEF(XMOPS,	"missing 'operator' specifier")		/* Unused */
+ERRDEF(XINOP,	"inapplicable operator specifier")
 
 /* Bytecode reader errors. */
 ERRDEF(BCFMT,	"cannot load incompatible bytecode")

@@ -645,6 +645,11 @@ static LexToken lex_scan_luar(LexState *ls, TValue *tv)
               lj_buf_reset(&ls->sb);
               return TK_eq;
             }
+            if (ls->c == '~') {
+	      lex_next(ls);
+	      lj_buf_reset(&ls->sb);
+	      return TK_subs; /* Substitution operator */
+	    }
             lj_buf_reset(&ls->sb);
             return '=';
           }
@@ -714,6 +719,7 @@ int lj_lex_setup(lua_State *L, LexState *ls)
   ls->lastline = 1;
   ls->endmark = 0;
   ls->fr2 = LJ_FR2;  /* Generate native bytecode by default. */
+  ls->mkind = MK_none;
   lex_next(ls);  /* Read-ahead first char. */
   if (ls->c == 0xef && ls->p + 2 <= ls->pe && (uint8_t)ls->p[0] == 0xbb &&
       (uint8_t)ls->p[1] == 0xbf) {  /* Skip UTF-8 BOM (if buffered). */
@@ -778,6 +784,8 @@ LexToken lj_lex_lookahead(LexState *ls)
 /* Convert token to string. */
 const char *lj_lex_token2str(LexState *ls, LexToken tok)
 {
+  if (tok == TK_function && G(ls->L)->pars.mode)
+    return "fn";
   if (tok > TK_OFS)
     return tokennames[tok-TK_OFS-1];
   else if (!lj_char_iscntrl(tok))

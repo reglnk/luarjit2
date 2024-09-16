@@ -2,7 +2,6 @@
 #define lj_syntax_h
 
 #include <stddef.h>
-#include <stdio.h>
 
 #include "lua.h"
 
