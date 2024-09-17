@@ -1,4 +1,4 @@
-# LuarJIT
+# LuarJIT v0.1
 
 A LuaJIT derivative with 2 frontends.
 This document assumes Lua is well-known to the reader and aims only to highlight differences of the second frontend.

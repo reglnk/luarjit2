@@ -18,8 +18,8 @@ For OpenResty luajit2 documentation, please refer to
 
  luajit2.md		(the content is left unchanged as for https://github.com/openresty/luajit2)
 
-luarjit2 is built ontop of that all, adding new syntax and thus being an implementation of a Lua-like language.
-LuarJIT is the previous implementation of that language ontop of official LuaJIT.
+luarjit2 is built ontop of that all, adding new syntax and thus being the second implementation of LuarJIT language
+(https://github.com/reglnk/LuarJIT is the first, made ontop of original LuaJIT source code).
 For LuarJIT documentation, please refer to
 
  luarjit.md
