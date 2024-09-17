@@ -117,7 +117,9 @@ LUALIB_API int luaL_loadfilex(lua_State *L, const char *filename,
   }
   len = strlen(filename);
   syntax = lua_getsyntaxmode(L);
-  if (len >= 5 && !memcmp(filename + len - 5, ".luar", 5))
+  if (len >= 4 && !memcmp(filename + len - 4, ".lua", 4))
+    lua_setsyntaxmode(L, 0);
+  else if (len >= 5 && !memcmp(filename + len - 5, ".luar", 5))
     lua_setsyntaxmode(L, 1);
   status = lua_loadx(L, reader_file, &ctx, chunkname, mode);
   lua_setsyntaxmode(L, syntax);

@@ -214,11 +214,11 @@ TARGET_AR= $(CROSS)ar rcus
 TARGET_STRIP= $(CROSS)strip
 
 TARGET_LIBPATH= $(or $(PREFIX),/usr/local)/$(or $(MULTILIB),lib)
-TARGET_SONAME= libluajit-$(ABIVER).so.$(MAJVER)
-TARGET_DYLIBNAME= libluajit-$(ABIVER).$(MAJVER).dylib
+TARGET_SONAME= libluarjit-$(ABIVER).so.$(MAJVER)
+TARGET_DYLIBNAME= libluarjit-$(ABIVER).$(MAJVER).dylib
 TARGET_DYLIBPATH= $(TARGET_LIBPATH)/$(TARGET_DYLIBNAME)
-TARGET_DLLNAME= lua$(NODOTABIVER).dll
-TARGET_DLLDOTANAME= libluajit-$(ABIVER).dll.a
+TARGET_DLLNAME= luar$(NODOTABIVER).dll
+TARGET_DLLDOTANAME= libluarjit-$(ABIVER).dll.a
 TARGET_XSHLDFLAGS= -shared -fPIC -Wl,-soname,$(TARGET_SONAME)
 TARGET_DYNXLDOPTS=
 
@@ -544,9 +544,9 @@ LIB_VMDEF= jit/vmdef.lua
 LIB_VMDEFP= $(LIB_VMDEF)
 
 LUAJIT_O= luajit.o
-LUAJIT_A= libluajit.a
-LUAJIT_SO= libluajit.so
-LUAJIT_T= luajit
+LUAJIT_A= libluarjit.a
+LUAJIT_SO= libluarjit.so
+LUAJIT_T= luarjit
 
 ALL_T= $(LUAJIT_T) $(LUAJIT_A) $(LUAJIT_SO) $(HOST_T)
 ALL_HDRGEN= lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h \
@@ -568,7 +568,7 @@ ifeq (Windows,$(TARGET_SYS))
   TARGET_DYNCC= $(STATIC_CC)
   LJVM_MODE= peobj
   LJVM_BOUT= $(LJVM_O)
-  LUAJIT_T= luajit.exe
+  LUAJIT_T= luarjit.exe
   ifeq (cygwin,$(HOST_MSYS))
     LUAJIT_SO= cyg$(TARGET_DLLNAME)
   else
@@ -760,6 +760,6 @@ $(LUAJIT_T): $(TARGET_O) $(LUAJIT_O) $(TARGET_DEP)
 	$(E) "LINK      $@"
 	$(Q)$(TARGET_LD) $(TARGET_ALDFLAGS) -o $@ $(LUAJIT_O) $(TARGET_O) $(TARGET_ALIBS)
 	$(Q)$(TARGET_STRIP) $@
-	$(E) "OK        Successfully built LuaJIT"
+	$(E) "OK        Successfully built LuarJIT"
 
 ##############################################################################

@@ -38,10 +38,10 @@ DPREFIX= $(DESTDIR)$(PREFIX)
 INSTALL_BIN=   $(DPREFIX)/bin
 INSTALL_LIB=   $(DPREFIX)/$(MULTILIB)
 INSTALL_SHARE= $(DPREFIX)/share
-INSTALL_DEFINC= $(DPREFIX)/include/luajit-$(MMVERSION)
+INSTALL_DEFINC= $(DPREFIX)/include/luarjit-$(MMVERSION)
 INSTALL_INC=   $(INSTALL_DEFINC)
 
-export INSTALL_LJLIBD= $(INSTALL_SHARE)/luajit-$(MMVERSION)
+export INSTALL_LJLIBD= $(INSTALL_SHARE)/luarjit-$(MMVERSION)
 INSTALL_JITLIB= $(INSTALL_LJLIBD)/jit
 INSTALL_LMODD= $(INSTALL_SHARE)/lua
 INSTALL_LMOD= $(INSTALL_LMODD)/$(ABIVER)
@@ -50,16 +50,16 @@ INSTALL_CMOD= $(INSTALL_CMODD)/$(ABIVER)
 INSTALL_MAN= $(INSTALL_SHARE)/man/man1
 INSTALL_PKGCONFIG= $(INSTALL_LIB)/pkgconfig
 
-INSTALL_TNAME= luajit-$(VERSION)
-INSTALL_TSYMNAME= luajit
-INSTALL_ANAME= libluajit-$(ABIVER).a
-INSTALL_SOSHORT1= libluajit-$(ABIVER).so
-INSTALL_SOSHORT2= libluajit-$(ABIVER).so.$(MAJVER)
-INSTALL_SONAME= libluajit-$(ABIVER).so.$(VERSION)
-INSTALL_DYLIBSHORT1= libluajit-$(ABIVER).dylib
-INSTALL_DYLIBSHORT2= libluajit-$(ABIVER).$(MAJVER).dylib
-INSTALL_DYLIBNAME= libluajit-$(ABIVER).$(VERSION).dylib
-INSTALL_PCNAME= luajit.pc
+INSTALL_TNAME= luarjit-$(VERSION)
+INSTALL_TSYMNAME= luarjit
+INSTALL_ANAME= libluarjit-$(ABIVER).a
+INSTALL_SOSHORT1= libluarjit-$(ABIVER).so
+INSTALL_SOSHORT2= libluarjit-$(ABIVER).so.$(MAJVER)
+INSTALL_SONAME= libluarjit-$(ABIVER).so.$(VERSION)
+INSTALL_DYLIBSHORT1= libluarjit-$(ABIVER).dylib
+INSTALL_DYLIBSHORT2= libluarjit-$(ABIVER).$(MAJVER).dylib
+INSTALL_DYLIBNAME= libluarjit-$(ABIVER).$(VERSION).dylib
+INSTALL_PCNAME= luarjit.pc
 
 INSTALL_STATIC= $(INSTALL_LIB)/$(INSTALL_ANAME)
 INSTALL_DYN= $(INSTALL_LIB)/$(INSTALL_SONAME)
@@ -89,9 +89,9 @@ ifneq ($(INSTALL_DEFINC),$(INSTALL_INC))
   SED_PC+= -e "s|^includedir=.*|includedir=$(INSTALL_INC)|"
 endif
 
-FILE_T= luajit
-FILE_A= libluajit.a
-FILE_SO= libluajit.so
+FILE_T= luarjit
+FILE_A= libluarjit.a
+FILE_SO= libluarjit.so
 FILE_MAN= luajit.1
 FILE_PC= luajit.pc
 FILES_INC= lua.h lualib.h lauxlib.h luaconf.h lua.hpp luajit.h
@@ -119,15 +119,15 @@ endif
 
 ##############################################################################
 
-INSTALL_DEP= src/luajit
+INSTALL_DEP= src/luarjit
 
 default all $(INSTALL_DEP):
-	@echo "==== Building LuaJIT $(MMVERSION) ===="
+	@echo "==== Building LuarJIT $(MMVERSION) ===="
 	$(MAKE) -C src
-	@echo "==== Successfully built LuaJIT $(MMVERSION) ===="
+	@echo "==== Successfully built LuarJIT $(MMVERSION) ===="
 
 install: $(INSTALL_DEP)
-	@echo "==== Installing LuaJIT $(VERSION) to $(PREFIX) ===="
+	@echo "==== Installing LuarJIT $(VERSION) to $(PREFIX) ===="
 	$(MKDIR) $(INSTALL_DIRS)
 	cd src && $(INSTALL_X) $(FILE_T) $(INSTALL_T)
 	cd src && test -f $(FILE_A) && $(INSTALL_F) $(FILE_A) $(INSTALL_STATIC) || :
@@ -144,10 +144,10 @@ install: $(INSTALL_DEP)
 	cd src && $(INSTALL_F) $(FILES_INC) $(INSTALL_INC)
 	cd src/jit && $(INSTALL_F) $(FILES_JITLIB) $(INSTALL_JITLIB)
 	$(SYMLINK) $(INSTALL_TNAME) $(INSTALL_TSYM)
-	@echo "==== Successfully installed LuaJIT $(VERSION) to $(PREFIX) ===="
+	@echo "==== Successfully installed LuarJIT $(VERSION) to $(PREFIX) ===="
 
 uninstall:
-	@echo "==== Uninstalling LuaJIT $(VERSION) from $(PREFIX) ===="
+	@echo "==== Uninstalling LuarJIT $(VERSION) from $(PREFIX) ===="
 	$(UNINSTALL) $(INSTALL_TSYM) $(INSTALL_T) $(INSTALL_STATIC) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2) $(INSTALL_MAN)/$(FILE_MAN) $(INSTALL_PC)
 	for file in $(FILES_JITLIB); do \
 	  $(UNINSTALL) $(INSTALL_JITLIB)/$$file; \
@@ -157,14 +157,14 @@ uninstall:
 	  done
 	$(LDCONFIG) $(INSTALL_LIB)
 	$(RMDIR) $(UNINSTALL_DIRS) || :
-	@echo "==== Successfully uninstalled LuaJIT $(VERSION) from $(PREFIX) ===="
+	@echo "==== Successfully uninstalled LuarJIT $(VERSION) from $(PREFIX) ===="
 
 ##############################################################################
 
 amalg:
-	@echo "==== Building LuaJIT $(MMVERSION) (amalgamation) ===="
+	@echo "==== Building LuarJIT $(MMVERSION) (amalgamation) ===="
 	$(MAKE) -C src amalg
-	@echo "==== Successfully built LuaJIT $(MMVERSION) (amalgamation) ===="
+	@echo "==== Successfully built LuarJIT $(MMVERSION) (amalgamation) ===="
 
 clean:
 	$(MAKE) -C src clean
