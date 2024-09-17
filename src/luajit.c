@@ -18,6 +18,7 @@
 #include "luajit.h"
 
 #include "lj_arch.h"
+#include "lj_syntax.h"
 
 #if LJ_TARGET_POSIX
 #include <unistd.h>
@@ -578,6 +579,7 @@ int main(int argc, char **argv)
   }
   smain.argc = argc;
   smain.argv = argv;
+  lua_setsyntaxmode(L, 1);
   status = lua_cpcall(L, pmain, NULL);
   report(L, status);
   lua_close(L);

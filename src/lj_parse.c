@@ -3350,10 +3350,8 @@ static int parse_stmt(LexState *ls)
     }
     else {
       lj_lex_next(ls);
-      line = ls->linenumber;
-      lex_check(ls, '{');
-      parse_block(ls);
-      lex_match(ls, '}', '{', line);
+      if (parse_block_opt(ls))
+	lj_lex_next(ls);
     }
     break;
   }
