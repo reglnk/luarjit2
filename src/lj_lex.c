@@ -812,16 +812,17 @@ void lj_lex_error(LexState *ls, LexToken tok, ErrMsg em, ...)
   va_end(argp);
 }
 
-/* A function to manipulate syntax mode in runtime
- * because it's sometimes not enough to use parser directives
- */
+/* A function to manipulate syntax mode in runtime. */
 static int syntaxmode_manip(lua_State *L)
 {
   int n = lua_gettop(L);
   if (!n) {
     lua_pushinteger(L, lua_getsyntaxmode(L));
-    return 1;
+    lua_pushinteger(L, lua_getsyntaxautosel(L));
+    return 2;
   }
+  if (n >= 2)
+    lua_setsyntaxautosel(L, lua_tointeger(L, 2));
   lua_setsyntaxmode(L, lua_tointeger(L, 1));
   return 0;
 }

@@ -8,16 +8,16 @@
 #include "lj_obj.h"
 #include "lj_lex.h"
 #include "lj_parse.h"
+#include "lj_syntax.h"
 
-
-LUA_API int lua_getsyntaxmode(lua_State *L)
+LUA_API int32_t lua_getsyntaxmode(lua_State *L)
 {
   global_State *g = G(L);
   ParserState *ps = &g->pars;
   return ps->mode;
 }
 
-LUA_API int lua_setsyntaxmode(lua_State *L, int mode)
+LUA_API int lua_setsyntaxmode(lua_State *L, int32_t mode)
 {
   if (mode < 0 || mode > 1) {
     setstrV(L, L->top++, lj_err_str(L, LJ_ERR_NUMRNG));
@@ -46,3 +46,16 @@ LUA_API int lua_setsyntaxmode(lua_State *L, int mode)
   return LUA_OK;
 }
 
+LUA_API int32_t lua_getsyntaxautosel(lua_State *L)
+{
+  global_State *g = G(L);
+  ParserState *ps = &g->pars;
+  return ps->autoselect;
+}
+
+LUA_API void lua_setsyntaxautosel(lua_State *L, int32_t autoselect)
+{
+  global_State *g = G(L);
+  ParserState *ps = &g->pars;
+  ps->autoselect = autoselect != 0;
+}

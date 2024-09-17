@@ -25,19 +25,25 @@ Thus, being like Kotlin compared to Java.
 These affect the mode immediately when the statement is read, and to work so, they must be a beginning of statement
 (the end is right there - no semicolon is needed after the directive).
 
-2 new API functions have been added for manipulation of syntax mode:
+4 new API functions have been added for manipulation of syntax mode:
 ```c
-LUA_API int lua_getsyntaxmode(lua_State *L)
+LUA_API int32_t lua_getsyntaxmode(lua_State *L)
 ```
 ```c
-LUA_API int lua_setsyntaxmode(lua_State *L, int mode)
+LUA_API int lua_setsyntaxmode(lua_State *L, int32_t mode)
 ```
-The syntax mode affects luaL_loadfile, luaL_loadstring and all functions that parse code.\
+```c
+LUA_API int32_t lua_getsyntaxautosel(lua_State *L)
+```
+```c
+LUA_API void lua_setsyntaxautosel(lua_State *L, int32_t autoselect)
+```
+The 'syntax mode' property affects luaL_loadfile, luaL_loadstring and all functions that parse code.\
 However, luaL_loadstring also affects the syntax mode: if the file has extension ".luar", it switches to Mode 1 before loading, and switches back after.
 Let this feature be called 'format detection'.
-Builtin global function `__syntax_mode` is made ontop of 2 above functions to manipulate the mode in runtime, for example, preceding `load`.
-Call it without arguments to get the current mode, or pass in the mode to set.
-Some feature is planned to override the format detection behaviour for setting any syntax mode for `dofile` and `require` without limitations.
+Builtin global function `__syntax_mode` is made ontop of 4 above functions to manipulate the mode in runtime, for example, preceding `load`.
+Call it without arguments to get the current mode and autoselect mode, or pass one of them or both to set.
+The 'autoselect mode' property is whether syntax mode automatically is selected based on file extension.
 
 ### For syntax description, the following 'description language' will be used:
 
@@ -50,7 +56,7 @@ Words written inside `[/ ]` have the direct meaning. For `</ >`, the meaning is 
 If 2 or more `/` slashes are in brackets, then the text after each slash (and before next slash or closing bracket) means a *variant*.
 This structure selects 1 of them.
 Thus,\
-	`[\//]` describes an optional sequence of symbols: `[//]`,\
+    `[\//]` describes an optional sequence of symbols: `[//]`,\
     `[/\]]`: optional symbol ']',\
     `[/foo/bar]`: token `foo`, `bar` or nothing,\
     `</foo/bar>`: required either `foo` or `bar`,\
@@ -108,30 +114,30 @@ As a side effect, `elseif` now can be replaced with `else if`.
 ```luar
 local i = 0;
 while (i < 100) {
-	i = i + 1
+    i = i + 1
 }
 
 repeat {
-	i = i - 1;
+    i = i - 1;
 } until (i == 0);
 
 local k = 2;
 if (i == 0)
-	print(0);
+    print(0);
 else if (k == 2)
-	print(1);
+    print(1);
 else if (k == 8)
-	print(8);
+    print(8);
 else print(874);
 
 for k, v in pairs({bar = 12, foo = 37}) do {
-	print(k, v);
+    print(k, v);
 }
 
 do {
-	print(12);
-	print(24);
-	print(37)
+    print(12);
+    print(24);
+    print(37)
 }
 ```
 
@@ -145,16 +151,16 @@ repeat i = i - 1 until i == 0
 
 local k = 2
 if i == 0 then
-	print(0)
+    print(0)
 elseif k == 2 then
-	print(1)
+    print(1)
 else print(2)
 ```
 However, such a syntax is not advised to use in Mode 1 and was only left in place for such cases to simplify reading brackets:
 ```luar
 if myobj:func((loc[0].property + 78) * loc[1].property, loc.select) then {
-	myobj:signal(loc);
-	myobj:accept();
+    myobj:signal(loc);
+    myobj:accept();
 }
 ```
 
@@ -352,14 +358,14 @@ local tmul = nameof operator<newindex> *.;
 Possible usage (full program):
 ```luar
 local fn defineStdOP(name) {
-	_G[name] = fn(self, a) getmetatable(self)[name](self, a);
+    _G[name] = fn(self, a) getmetatable(self)[name](self, a);
 }
 defineStdOP(nameof +=);
 defineStdOP(nameof -=);
 
 local obj = setmetatable({v = 0}, {
-	[nameof +=] = fn(self, val) {self.v = self.v + val},
-	[nameof -=] = fn(self, val) {self.v = self.v - val}
+    [nameof +=] = fn(self, val) {self.v = self.v + val},
+    [nameof -=] = fn(self, val) {self.v = self.v - val}
 });
 obj += 2;
 print(obj.v); // 2
@@ -436,8 +442,8 @@ local obj2 = setmetatable({v = 0}, Bar);
 obj1 += 20; // 0
 obj2 += 40; // 40
 
-print(obj1 is Foo, obj2 is Bar); // true	true
-print(obj1 is Bar, obj2 is Foo); // false	false
+print(obj1 is Foo, obj2 is Bar); // true    true
+print(obj1 is Bar, obj2 is Foo); // false    false
 ```
 
 ## Optional chaining operator
@@ -504,8 +510,8 @@ Substitution of values with square brackets subscription at the end is also supp
 The following code
 ```luar
 fn calc(a) {
-	print("'calc' called!", times);
-	return a * a;
+    print("'calc' called!", times);
+    return a * a;
 }
 local obj = {qwer = {bar = {foo = {[16] = 5678}}}};
 obj.qwer.bar.foo[calc(4)] =~ +1
@@ -513,8 +519,8 @@ obj.qwer.bar.foo[calc(4)] =~ +1
 will output `'calc' called!` once, since it is an equivalent for
 ```luar
 fn calc(a) {
-	print("'calc' called!");
-	return a * a;
+    print("'calc' called!");
+    return a * a;
 }
 local obj = {qwer = {bar = {foo = {[16] = 5678}}}};
 local base = obj.qwer.bar.foo;
@@ -528,9 +534,9 @@ This code was used for testing.
 
 ```luar
 fn calc(a) {
-	times =~ or 0;
-	times =~ + 1;
-	return a * a;
+    times =~ or 0;
+    times =~ + 1;
+    return a * a;
 }
 fn getb() nameof b;
 local fn geta() nameof a;
@@ -538,10 +544,10 @@ fn getr() nameof r;
 
 // test upvalues
 do {
-	local w = "w";
-	fn getw() {
-		return w;
-	}
+    local w = "w";
+    fn getw() {
+        return w;
+    }
 }
 
 local bar = getb();
@@ -549,11 +555,11 @@ bar =~.. geta();
 
 operator fn concat(l, r) l .. r;
 do {
-	local operator fn >.(obj, k) obj[k];
-	local op = operator >.;
-	operator fn -->.(obj, k) {
-		return op(obj, k);
-	}
+    local operator fn >.(obj, k) obj[k];
+    local op = operator >.;
+    operator fn -->.(obj, k) {
+        return op(obj, k);
+    }
 }
 operator fn ->(l, r) r(l);
 
@@ -565,17 +571,17 @@ local calc1 = calc;
 
 fn test(obj)
 {
-	local n = times or 0;
-	obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc((fn() 2)()) * calc1(2)] =~+ 1;
-	obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1(2)] =~+ 4;
-	obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] =~+ 80;
-	obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] =~ +
-		obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] + (2 * 773 -> pass);
-	local val = obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))];
-	print(obj.qwer.bar.foo[16]); // 13072
-	assert(val == obj.qwer.bar.foo[16]);
-	assert(val == 13072);
-	assert(times - n == 20);
+    local n = times or 0;
+    obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc((fn() 2)()) * calc1(2)] =~+ 1;
+    obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1(2)] =~+ 4;
+    obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] =~+ 80;
+    obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] =~ +
+        obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))] + (2 * 773 -> pass);
+    local val = obj["q" .. getw() .. "e" .. getr()][bar concat getr()]-->.foo[calc(2) * calc1?(2) * (calc1?(1 * 1) * calc(1 or 10))];
+    print(obj.qwer.bar.foo[16]); // 13072
+    assert(val == obj.qwer.bar.foo[16]);
+    assert(val == 13072);
+    assert(times - n == 20);
 }
 
 local ob1 = {qwer = {bar = {foo = {[16] = 5678}}}};
@@ -603,17 +609,16 @@ j = obj--
 
 ### More on syntax mode
 
-Here's the reference implementation of function to correctly import plain Lua modules from Luar code.
-It's deprecated and useless after the update with 'format detection' feature.
-Some changes to __syntax_mode are planned to make it possible to override this behaviour.
+Here's a way to force Lua syntax for some modules:
 ```luar
-local require = require; fn luaimport(pkg)
+local require = require;
+fn luaimport(pkg)
 {
-	local prevmode = __syntax_mode();
-	if (prevmode == 1)
-		__syntax_mode(0);
-	local stuff = require(pkg);
-	__syntax_mode(prevmode);
-	return stuff;
+    local prevmode, autosel = __syntax_mode();
+	__syntax_mode(0, 0);
+    local stuff = require(pkg);
+    __syntax_mode(prevmode, autosel);
+    return stuff;
 }
 ```
+After loading a module with this function, the parser will be returned to the same syntax state as before.

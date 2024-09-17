@@ -274,7 +274,7 @@ LUA_API lua_State *lua_newstate(lua_Alloc allocf, void *allocd)
   g->allocf = allocf;
   g->allocd = allocd;
   g->prng = prng;
-  g->pars = (ParserState){.funcstr = NULL, .mode = 0};
+  g->pars = (ParserState){.funcstr = NULL, .mode = 0, .autoselect = 1};
 #ifndef LUAJIT_USE_SYSMALLOC
   if (allocf == lj_alloc_f) {
     lj_alloc_setprng(allocd, &g->prng);

@@ -115,14 +115,17 @@ LUALIB_API int luaL_loadfilex(lua_State *L, const char *filename,
     ctx.fp = stdin;
     chunkname = "=stdin";
   }
-  len = strlen(filename);
-  syntax = lua_getsyntaxmode(L);
-  if (len >= 4 && !memcmp(filename + len - 4, ".lua", 4))
-    lua_setsyntaxmode(L, 0);
-  else if (len >= 5 && !memcmp(filename + len - 5, ".luar", 5))
-    lua_setsyntaxmode(L, 1);
-  status = lua_loadx(L, reader_file, &ctx, chunkname, mode);
-  lua_setsyntaxmode(L, syntax);
+  if (G(L)->pars.autoselect) {
+    len = strlen(filename);
+    syntax = lua_getsyntaxmode(L);
+    if (len >= 4 && !memcmp(filename + len - 4, ".lua", 4))
+      lua_setsyntaxmode(L, 0);
+    else if (len >= 5 && !memcmp(filename + len - 5, ".luar", 5))
+      lua_setsyntaxmode(L, 1);
+    status = lua_loadx(L, reader_file, &ctx, chunkname, mode);
+    lua_setsyntaxmode(L, syntax);
+  }
+  else status = lua_loadx(L, reader_file, &ctx, chunkname, mode);
   if (ferror(ctx.fp)) {
     L->top -= filename ? 2 : 1;
     lua_pushfstring(L, "cannot read %s: %s", chunkname+1, strerror(errno));
