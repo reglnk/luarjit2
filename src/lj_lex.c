@@ -477,8 +477,8 @@ static LJ_AINLINE char luar_char_oper_toident(char ch)
     case '!': return 'k';
     case '=': return 'e';
     case '<': return 'o';
-    case '>': return 'p';
-    case '.': return 't';
+    case '>': return 'g';
+    case '.': return 'p';
     default:
       return 0;
   }
@@ -486,7 +486,8 @@ static LJ_AINLINE char luar_char_oper_toident(char ch)
 
 /* no one resulting string should be contained in another.
  * the '|' should have been "or" but this could cause ambiguity
- * between operators "^|" and "^".
+ * between operators "|^" and "^".
+ * @link ./lj_parse.c, expr_binop_luar depends on this
  */
 static LJ_AINLINE const char *luar_char_oper_name(char ch)
 {
@@ -511,7 +512,7 @@ static LJ_AINLINE const char *luar_char_oper_name(char ch)
 }
 
 /*
- * Checks if some string is builtin Lua (Luar) operator. If so, returns it as token code.
+ * Checks if some string is builtin Luar operator. If so, returns it as token code.
  * Otherwise, TK_oper is returned, which means it can be used as custom operator.
  */
 static LJ_AINLINE LexToken luar_getoptype(const char *s, unsigned len)
