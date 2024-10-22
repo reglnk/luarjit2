@@ -1,7 +1,7 @@
 #ifndef lj_syntax_h
 #define lj_syntax_h
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include "lua.h"
 

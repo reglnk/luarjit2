@@ -2155,14 +2155,14 @@ static const struct {
   uint8_t ascurrent;	/* Left priority. */
   uint8_t asnext;	/* Right priority. */
 } priority[] = {
-  {7,7}, {7,7}, {8,8}, {8,8}, {8,8},	/* ADD SUB MUL DIV MOD */
-  {11,10}, {6,5},			/* POW CONCAT (right associative) */
-  {4,4}, {4,4},				/* EQ NE */
-  {4,4}, {4,4}, {4,4}, {4,4},		/* LT GE GT LE */
-  {3,3}, {2,2}				/* AND OR */
+  {8,8}, {8,8}, {9,9}, {9,9}, {9,9},	/* ADD SUB MUL DIV MOD */
+  {12,11}, {7,6},			/* POW CONCAT (right associative) */
+  {5,5}, {5,5},				/* EQ NE */
+  {5,5}, {5,5}, {5,5}, {5,5},		/* LT GE GT LE */
+  {4,4}, {3,3}				/* AND OR */
 };
 
-#define UNARY_PRIORITY		9  /* Priority for unary operators. */
+#define UNARY_PRIORITY		10  /* Priority for unary operators. */
 
 /* Defines the list of symbols which make infix expressions unary
  * (incase the one is right after such an operator)
@@ -2594,21 +2594,29 @@ static BinOpr expr_binop_luar(LexState *ls, ExpDesc *v, uint32_t limit)
   else expr_unop(ls, v);
   for (;;) {
     LexToken otk = ls->tok;
-    if (otk == TK_name && limit < 1) {
+    if (otk == TK_name && limit < 2) {
       /* Now it's an operator. */
       luar_mangle_str(ls, LUAR_VAROPHDR, LUAR_VAROPHDR_LEN);
       ExpDesc func;
       var_lookup(ls, &func);
       bcemit_infix(ls->fs, v, &func);
-      parse_infix_rhs(ls, v, 1, otk);
+      parse_infix_rhs(ls, v, 2, otk);
       continue;
     }
-    if (otk == TK_oper && limit < 1) {
-      ExpDesc func;
-      var_lookup(ls, &func);
-      bcemit_infix(ls->fs, v, &func);
-      parse_infix_rhs(ls, v, 1, otk);
-      continue;
+    if (otk == TK_oper) {
+      GCstr *s = strV(&ls->tokval);
+      const char *sd = strdata(s);
+      lj_assertX(s->len > LUAR_OPHDR_LEN, "unexpected symbol length");
+      char c1 = sd[LUAR_OPHDR_LEN], c2 = sd[s->len - 1];
+      /* @link 'q' and 't' are from lj_lex.c, luar_char_oper_name */
+      uint32_t priority = 2 - (c1 == 'q' || c2 == 'q' || c1 == 't' || c2 == 't');
+      if (priority > limit) {
+	ExpDesc func;
+	var_lookup(ls, &func);
+	bcemit_infix(ls->fs, v, &func);
+	parse_infix_rhs(ls, v, priority, otk);
+	continue;
+      }
     }
     if ((op = token2binop(otk)) != OPR_NOBINOPR && priority[op].ascurrent > limit) {
       ExpDesc v2;
@@ -2616,7 +2624,7 @@ static BinOpr expr_binop_luar(LexState *ls, ExpDesc *v, uint32_t limit)
       lj_lex_next(ls);
       bcemit_binop_left(ls->fs, op, v);
       /* Parse binary expression with higher priority. */
-      nextop = expr_binop(ls, &v2, priority[op].asnext);
+      nextop = expr_binop_luar(ls, &v2, priority[op].asnext);
       bcemit_binop(ls->fs, op, v, &v2);
       op = nextop;
       continue;
