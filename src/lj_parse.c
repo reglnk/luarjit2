@@ -3013,6 +3013,7 @@ static void parse_goto(LexState *ls)
 static void parse_label(LexState *ls)
 {
   FuncState *fs = ls->fs;
+  ParserState *ps = &G(ls->L)->pars;
   GCstr *name;
   MSize idx;
   fs->lasttarget = fs->pc;
@@ -3022,7 +3023,7 @@ static void parse_label(LexState *ls)
   if (gola_findlabel(ls, name))
     lj_lex_error(ls, 0, LJ_ERR_XLDUP, strdata(name));
   idx = gola_new(ls, name, VSTACK_LABEL, fs->pc);
-  if (G(ls->L)->pars.mode == 0) lex_check(ls, TK_label);
+  if (ps->mode == 0) lex_check(ls, TK_label);
   /* Recursively parse trailing statements: labels and ';' (Lua 5.2 only). */
   for (;;) {
     if (ls->tok == TK_label) {
@@ -3036,7 +3037,10 @@ static void parse_label(LexState *ls)
     }
   }
   /* Trailing label is considered to be outside of scope. */
-  if (parse_isend(ls->tok) && ls->tok != TK_until)
+  int is_end = ps->mode == 0
+  ? parse_isend(ls->tok)
+  : parse_isend_luar(ls->tok);
+  if (is_end && ls->tok != TK_until)
     ls->vstack[idx].slot = fs->bl->nactvar;
   gola_resolve(ls, fs->bl, idx);
 }
