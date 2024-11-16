@@ -2041,8 +2041,23 @@ static BCReg parse_params(LexState *ls, int needself)
     var_new_lit(ls, nparams++, "self");
   if (ls->tok != ')') {
     do {
+      int typehint = 0;
+      if (ls->tok == '<') {
+	typehint = 1;
+	do lj_lex_next(ls);
+	while (ls->tok != '>');
+	lj_lex_next(ls);
+      }
       if (ls->tok == TK_name || (!LJ_52 && ls->tok == TK_goto)) {
-	var_new(ls, nparams++, lex_str(ls));
+	GCstr *varname = lex_str(ls);
+	lex_opt(ls, '?');
+	if (ls->tok == TK_name || (!LJ_52 && ls->tok == TK_goto)) {
+	  if (typehint)
+	    err_syntax(ls, LJ_ERR_XPARAM);
+	  typehint = 1;
+	  varname = lex_str(ls);
+	}
+	var_new(ls, nparams++, varname);
       } else if (ls->tok == TK_dots) {
 	lj_lex_next(ls);
 	fs->flags |= PROTO_VARARG;
@@ -2504,6 +2519,11 @@ static void expr_simple(LexState *ls, ExpDesc *v)
     return;
   case TK_function:
     lj_lex_next(ls);
+    if (ls->tok == '<') { /* Type hint */
+      do lj_lex_next(ls);
+      while (ls->tok != '>');
+      lj_lex_next(ls);
+    }
     parse_body(ls, v, 0, ls->linenumber);
     return;
   default:
@@ -2837,6 +2857,11 @@ static void parse_local(LexState *ls)
 {
   luar_opt_mangle_defapply(ls);
   if (lex_opt(ls, TK_function)) {  /* Local function declaration. */
+    if (ls->tok == '<') { /* Type hint */
+      do lj_lex_next(ls);
+      while (ls->tok != '>');
+      lj_lex_next(ls);
+    }
     luar_opt_mangle_symbol(ls);
     ExpDesc v, b;
     FuncState *fs = ls->fs;
@@ -2911,6 +2936,11 @@ static void parse_func(LexState *ls, BCLine line)
   ExpDesc v, b;
   int needself = 0;
   lj_lex_next(ls);  /* Skip 'function'. */
+  if (ls->tok == '<') { /* Type hint */
+    do lj_lex_next(ls);
+    while (ls->tok != '>');
+    lj_lex_next(ls);
+  }
   LexMKind mprev = ls->mkind;
   luar_opt_mangle_symbol(ls);
   /* Parse function name. */
