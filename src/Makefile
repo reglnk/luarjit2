@@ -545,7 +545,7 @@ LIB_VMDEFP= $(LIB_VMDEF)
 
 LUAJIT_O= luajit.o
 LUAJIT_A= libluarjit.a
-LUAJIT_SO= libluarjit.so
+LUAJIT_SO= $(TARGET_SONAME) # depends on -Wl,-soname
 LUAJIT_T= luarjit
 
 ALL_T= $(LUAJIT_T) $(LUAJIT_A) $(LUAJIT_SO) $(HOST_T)
