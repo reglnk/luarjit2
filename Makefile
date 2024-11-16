@@ -91,7 +91,7 @@ endif
 
 FILE_T= luarjit
 FILE_A= libluarjit.a
-FILE_SO= libluarjit.so
+FILE_SO= libluarjit-$(ABIVER).so.$(MAJVER) # depends on -Wl,-soname
 FILE_MAN= luajit.1
 FILE_PC= luajit.pc
 FILES_INC= lua.h lualib.h lauxlib.h luaconf.h lua.hpp luajit.h
